@@ -1,0 +1,77 @@
+# Load dataset
+data <- read.csv("creditcard.csv")
+
+# Show first rows
+head(data)
+
+# Show dataset structure
+str(data)
+
+# Summary statistics
+summary(data)
+
+# Count fraud vs normal transactions
+table(data$Class)
+
+# Fraud percentage
+prop.table(table(data$Class)) * 100
+
+library(ggplot2)
+
+ggplot(data, aes(x=factor(Class))) +
+  geom_bar(fill="blue") +
+  labs(
+    title="Fraud vs Normal Transactions",
+    x="Transaction Type (0 = Normal, 1 = Fraud)",
+    y="Count"
+  )
+
+#Many fraud transactions occur at smaller amounts
+ggplot(data, aes(x=Amount, fill=factor(Class))) +
+  geom_histogram(binwidth=50) +
+  labs(
+    title="Transaction Amount Distribution",
+    x="Transaction Amount",
+    y="Count",
+    fill="Class"
+  )
+
+library(corrplot)
+
+# Calculate correlation matrix
+cor_matrix <- cor(data)
+
+# Cleaner correlation plot
+corrplot(
+  cor_matrix,
+  method = "color",
+  type = "upper",
+  tl.cex = 0.6,     # smaller text
+  tl.col = "black",
+  number.cex = 0.5
+)
+
+# Build Logistic Regression Model
+model <- glm(Class ~ Time + Amount,
+             data = data,
+             family = binomial)
+
+# Show model summary
+summary(model)
+
+
+# Predict fraud probability
+pred_prob <- predict(model, type = "response")
+
+# Convert probability to class (0 or 1)
+pred_class <- ifelse(pred_prob > 0.5, 1, 0)
+
+# Compare predictions with actual values
+table(Predicted = pred_class, Actual = data$Class)
+
+
+# Calculate accuracy
+accuracy <- mean(pred_class == data$Class)
+
+# Print accuracy
+accuracy
